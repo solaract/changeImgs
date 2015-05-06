@@ -18,6 +18,36 @@ var switch_img = (function(){
         }
     };
     var change = {
+        //第n个图片
+        nImg:0,
+        //保存图片位置
+        imgPosition:[],
+        isImgsLoad:function(target,cb){
+            var isLaod,imgs, i,len;
+            if(document.getElementsByClassName){
+                imgs = document.getElementsByClassName('chaImg');
+            }
+            else{
+                imgs = target.getElementsByTagName('img');
+            }
+            len = imgs.length;
+            for(i = 0;i<len;i++){
+                if(imgs[i].height === 0){
+                    isLaod = false;
+                    return isLaod;
+                }
+            }
+            if(isLaod){
+                clearTimeout(loadImg);
+                cb();
+            }
+            else{
+                isLaod = true;
+                loadImg = setTimeout(function(){
+                    this.isImgLoad(target,cb);
+                },500);
+            }
+        },
         //获得计算样式
         getStyle:function(target){
             if(target.currentStyle){
@@ -30,6 +60,11 @@ var switch_img = (function(){
                     return getComputedStyle(target)[cssStyle];
                 }
             }
+        },
+        calDistance:function(){
+            var len = imgPosition.length;
+            this.nImg = (this.nImg<(len-1))?(n+1):0;
+            return this.imgPosition[nImg];
         },
         animate:function(cssStyle,target,speed){
             //css属性名称
@@ -77,8 +112,8 @@ var switch_img = (function(){
                         //原位置+计算长度
                         target.style[css[i]] = (nowCss[css[i]]+formula[css[i]](useTime))+'px';
                     }
-                    //自调用，40帧
-                    return setTimeout(ani,25);
+                    //自调用，50帧
+                    return setTimeout(ani,20);
                 }
                 //动画已结束
                 else{
