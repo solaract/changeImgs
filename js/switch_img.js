@@ -11,19 +11,46 @@ function extend(obj, extension){
 }
 var switch_img = (function(){
     var Constructer = function(img_info){
-        var len = img_info.len||0;
-        this.speed = img_info.speed;
-        this.get_len = function(){
-            return len;
+        var speed,target,waitTime;
+        if(typeof img_info.speed === 'number'||typeof img_info.waitTime === 'number'){
+            speed = img_info.speed;
+            waitTime = img_info.waitTime;
         }
+        else{
+            throw "speed or waitTime should be a number";
+        }
+        if(img_info.target){
+            typeof img_info.target == "string"?target = document.getElementById(img_info.target):target = img_info.target;
+        }
+        else{
+            throw "img_info['target'] should be a HTML object]";
+        }
+        this.getSpeed = function(){
+            return speed;
+        };
+        this.getTarget = function(){
+            return target;
+        };
+        this.getWait = function(){
+            return waitTime;
+        };
+//        var len = img_info.len||0;
+//        this.speed = img_info.speed;
+//        this.get_len = function(){
+//            return len;
+//        }
     };
     var change = {
         //第n个图片
         nImg:0,
         //保存图片位置
         imgPosition:[],
+        //动画结束后执行
+        swiched:[],
+        //判断图片是否都加载完成
         isImgsLoad:function(target,cb){
-            var isLaod,imgs, i,len;
+            var isLaod,imgs,i,len,loadImg,getImgStyle;
+            isLaod = true;
             if(document.getElementsByClassName){
                 imgs = document.getElementsByClassName('chaImg');
             }
@@ -32,19 +59,24 @@ var switch_img = (function(){
             }
             len = imgs.length;
             for(i = 0;i<len;i++){
-                if(imgs[i].height === 0){
+                getImgStyle = this.getStyle(imgs[i]);
+//                console.log(parseInt(getImgStyle('height')));
+                if(parseInt(getImgStyle('height')) === 0){
                     isLaod = false;
-                    return isLaod;
+                    break;
                 }
             }
             if(isLaod){
-                clearTimeout(loadImg);
+                if(loadImg){
+                    clearTimeout(loadImg);
+                }
+//                alert(1);
                 cb();
             }
             else{
                 isLaod = true;
                 loadImg = setTimeout(function(){
-                    this.isImgLoad(target,cb);
+                    change.isImgsLoad(target,cb);
                 },500);
             }
         },
@@ -61,12 +93,16 @@ var switch_img = (function(){
                 }
             }
         },
+        //下一个图片位置
         calDistance:function(){
-            var len = imgPosition.length;
-            this.nImg = (this.nImg<(len-1))?(n+1):0;
-            return this.imgPosition[nImg];
+            var len = this.imgPosition.length;
+            this.nImg = (this.nImg<(len-1))?(this.nImg+1):0;
+            return this.imgPosition[this.nImg];
         },
+        //位置长度动画函数
         animate:function(cssStyle,target,speed){
+            //保存this对象
+            var that = this;
             //css属性名称
             var css = [];
             //开始时css属性名值对对象
@@ -105,7 +141,8 @@ var switch_img = (function(){
                 var nowTime = new Date().getTime();
                 //已用时间
                 var useTime = nowTime-time;
-                var key;
+                var i;
+//                var key;
                 //动画未结束
                 if(useTime<speed){
                     for(i = 0;i<cssLen;i++){
@@ -121,8 +158,62 @@ var switch_img = (function(){
                         //原位置+总距离
                         target.style[css[i]] = (nowCss[css[i]]+cssStyle[css[i]])+'px';
                     }
+                    var len = that.swiched.length;
+                    for(i = 0;i<len;i++){
+                        that.swiched[i]();
+                    }
                 }
             }
         }
-    }
+    };
+    Constructer.prototype.run = function(){
+        var target = this.getTarget();
+        var speed = this.getSpeed();
+        var waitTime = this.getWait();
+        var allTime = speed+waitTime;
+        var getTargetStyle = change.getStyle(target);
+        var imgLoaded = function(){
+            var imgs,imgLen,getImgStyle,begainLeft,imgsN,swtichImg;
+            if(document.getElementsByClassName){
+                imgs = document.getElementsByClassName('chaImg');
+            }
+            else{
+                imgs = target.getElementsByTagName('img');
+            }
+            getImgStyle = change.getStyle(imgs[0]);
+            imgLen = parseInt(getImgStyle('width'));
+            if(!parseInt(getTargetStyle('left'))){
+
+            }
+            begainLeft = parseInt(getTargetStyle('left'));
+            imgsN = imgs.length;
+            for(var i = 0;i<imgsN;i++){
+                change.imgPosition.push(begainLeft+i*imgLen);
+            }
+//            console.log(change.imgPosition);
+            swtichImg = setTimeout(chanImg,waitTime);
+        };
+        change.swiched.push(function(){
+            setTimeout(chanImg,waitTime);
+        });
+        var chanImg = function(){
+            var nowLeft,left,distance,cssStyle;
+            nowLeft = change.imgPosition[change.nImg];
+//            console.log(nowLeft);
+            left = change.calDistance();
+            distance = nowLeft-left;
+//            console.log(distance);
+            cssStyle = {};
+            cssStyle['left'] = distance;
+            change.animate(cssStyle,target,speed)();
+        };
+        change.isImgsLoad(target,imgLoaded);
+    };
+    return Constructer;
 })();
+var a = new switch_img({
+    target:'allImgs',
+    speed:500,
+    waitTime:4000
+});
+a.run();
