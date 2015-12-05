@@ -1,6 +1,12 @@
 /**
  * Created by zxy on 2015/5/2.
  */
+/**
+ *
+ * @param obj
+ * @param extension
+ * @returns {*}
+ */
 function extend(obj, extension){
     for(var key in extension){
         if(extension.hasOwnProperty(key) && obj[key] == null){
@@ -9,8 +15,14 @@ function extend(obj, extension){
     }
     return obj;
 }
+
 var switch_img = (function(){
-    var Constructer = function(img_info){
+    /**
+     *
+     * @param img_info
+     * @constructor
+     */
+    var Constructor = function(img_info){
         var speed,target,waitTime;
         if(typeof img_info.speed === 'number'||typeof img_info.waitTime === 'number'){
             speed = img_info.speed;
@@ -100,6 +112,13 @@ var switch_img = (function(){
             return this.imgPosition[this.nImg];
         },
         //位置长度动画函数
+        /**
+         *
+         * @param cssStyle {}
+         * @param target ele
+         * @param speed  num
+         * @returns {ani}
+         */
         animate:function(cssStyle,target,speed){
             //保存this对象
             var that = this;
@@ -166,7 +185,7 @@ var switch_img = (function(){
             }
         }
     };
-    Constructer.prototype.run = function(){
+    Constructor.prototype.run = function(){
         var target = this.getTarget();
         var speed = this.getSpeed();
         var waitTime = this.getWait();
@@ -209,7 +228,7 @@ var switch_img = (function(){
         };
         change.isImgsLoad(target,imgLoaded);
     };
-    return Constructer;
+    return Constructor;
 })();
 var a = new switch_img({
     target:'allImgs',
